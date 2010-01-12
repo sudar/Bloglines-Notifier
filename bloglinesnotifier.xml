@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<Module>
+  <ModulePrefs title="Bloglines Notifier" height="40" description="Displays the number of unread items in your Bloglines account. The count is refreshed periodically and you can also set the refreshing interval." author="Sudar" author_location="Chennai, India" screenshot="http://sudarmuthu.com/projects/bloglinesnotifier.gif" thumbnail="http://sudarmuthu.com/projects/bloglinesnotifier.png" author_email="Sudar@sudarmuthu.com" author_link="http://SudarMuthu.com" author_aboutme="I am a web developer in my early twenties saying HI to you from the beautiful city of Chennai in India. Wanna know more about me, then visit my blog" author_quote="Convince, else confuse" author_photo="http://sudarmuthu.com/projects/sudar.png">
+		<Require feature="dynamic-height"/>
+		<Require feature="analytics" />
+  </ModulePrefs> 
+  <UserPref name="blgemail" display_name="Email Address" datatype = "string" required="true" />  
+  <UserPref name="blginterval" display_name="Refresh Interval"  datatype = "string" required="true" default_value = "10" />    
+   <Content type="html"> 
+     <![CDATA[ 
+	<script>
+	     // Track this gadget using Google Analytics.
+	     _IG_Analytics("UA-3084019-1", "/bloglinesnotifier");
+	   </script>
+		<div id="content_div" style="font-size: small;">Updating unread items count for __UP_blgemail__. Please wait ...</div>
+		<script type="text/javascript">
+		
+		var prefs = new _IG_Prefs(__MODULE_ID__);
+		
+		function getRandStr() {
+			var date = new Date();
+			return Math.ceil(date.getTime() / (prefs.getInt("blginterval") - 5000)) * (prefs.getInt("blginterval") - 5000);		
+		}
+
+		function getFeedCount() {
+
+				var prefs = new _IG_Prefs(__MODULE_ID__);
+				
+			_IG_FetchContent('http://rpc.bloglines.com/update?user=' + prefs.getString("blgemail") + '&ver=1&rnd=' + getRandStr() , function (responseText) {
+
+				if (responseText == null || responseText == undefined || responseText == "") {
+				  _gel("content_div").innerHTML = "<i>There is some problem in accessing the Bloglines server. Try after some time.</i>";
+				  return;
+				}
+				var count = 0;
+				var html = "";
+				
+				count = responseText.split("|")[1];
+				
+				if (count.isNAN || count == -1) {
+					html = "The username " + prefs.getString("blgemail") + " is invalid. Click the edit button above to change it.";
+				} else {
+					html = "There are <a href='http://www.bloglines.com/myblogs/'>" + count + "</a> unread items for " + prefs.getString("blgemail");
+				}
+				_gel('content_div').innerHTML = html; 
+			});          
+		}	
+		
+		window.setTimeout("getFeedCount()", (prefs.getInt('blginterval') * 60 * 1000));
+
+		_IG_RegisterOnloadHandler(getFeedCount());
+
+       </script>        
+     ]]> 
+     
+   </Content>
+</Module>
